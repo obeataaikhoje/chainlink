@@ -455,3 +455,130 @@ var CallbackExecutable_ServiceDesc = grpc.ServiceDesc{
 	},
 	Metadata: "capabilities/pb/capabilities.proto",
 }
+
+const (
+	StandardCapabilities_Initialise_FullMethodName = "/loop.StandardCapabilities/Initialise"
+	StandardCapabilities_Infos_FullMethodName      = "/loop.StandardCapabilities/Infos"
+)
+
+// StandardCapabilitiesClient is the client API for StandardCapabilities service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type StandardCapabilitiesClient interface {
+	Initialise(ctx context.Context, in *InitialiseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Infos(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CapabilityInfosReply, error)
+}
+
+type standardCapabilitiesClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewStandardCapabilitiesClient(cc grpc.ClientConnInterface) StandardCapabilitiesClient {
+	return &standardCapabilitiesClient{cc}
+}
+
+func (c *standardCapabilitiesClient) Initialise(ctx context.Context, in *InitialiseRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, StandardCapabilities_Initialise_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *standardCapabilitiesClient) Infos(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*CapabilityInfosReply, error) {
+	out := new(CapabilityInfosReply)
+	err := c.cc.Invoke(ctx, StandardCapabilities_Infos_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// StandardCapabilitiesServer is the server API for StandardCapabilities service.
+// All implementations must embed UnimplementedStandardCapabilitiesServer
+// for forward compatibility
+type StandardCapabilitiesServer interface {
+	Initialise(context.Context, *InitialiseRequest) (*emptypb.Empty, error)
+	Infos(context.Context, *emptypb.Empty) (*CapabilityInfosReply, error)
+	mustEmbedUnimplementedStandardCapabilitiesServer()
+}
+
+// UnimplementedStandardCapabilitiesServer must be embedded to have forward compatible implementations.
+type UnimplementedStandardCapabilitiesServer struct {
+}
+
+func (UnimplementedStandardCapabilitiesServer) Initialise(context.Context, *InitialiseRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Initialise not implemented")
+}
+func (UnimplementedStandardCapabilitiesServer) Infos(context.Context, *emptypb.Empty) (*CapabilityInfosReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Infos not implemented")
+}
+func (UnimplementedStandardCapabilitiesServer) mustEmbedUnimplementedStandardCapabilitiesServer() {}
+
+// UnsafeStandardCapabilitiesServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to StandardCapabilitiesServer will
+// result in compilation errors.
+type UnsafeStandardCapabilitiesServer interface {
+	mustEmbedUnimplementedStandardCapabilitiesServer()
+}
+
+func RegisterStandardCapabilitiesServer(s grpc.ServiceRegistrar, srv StandardCapabilitiesServer) {
+	s.RegisterService(&StandardCapabilities_ServiceDesc, srv)
+}
+
+func _StandardCapabilities_Initialise_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InitialiseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StandardCapabilitiesServer).Initialise(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StandardCapabilities_Initialise_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StandardCapabilitiesServer).Initialise(ctx, req.(*InitialiseRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _StandardCapabilities_Infos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(StandardCapabilitiesServer).Infos(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: StandardCapabilities_Infos_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(StandardCapabilitiesServer).Infos(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// StandardCapabilities_ServiceDesc is the grpc.ServiceDesc for StandardCapabilities service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var StandardCapabilities_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "loop.StandardCapabilities",
+	HandlerType: (*StandardCapabilitiesServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Initialise",
+			Handler:    _StandardCapabilities_Initialise_Handler,
+		},
+		{
+			MethodName: "Infos",
+			Handler:    _StandardCapabilities_Infos_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "capabilities/pb/capabilities.proto",
+}
