@@ -103,9 +103,8 @@ type Relayer interface {
 	// NewContractReader returns a new ContractReader.
 	// The format of contractReaderConfig depends on the implementation.
 	NewContractReader(contractReaderConfig []byte) (ContractReader, error)
-
+	NewContractStateReader(config []byte) (ContractStateReader, error)
 	NewConfigProvider(rargs RelayArgs) (ConfigProvider, error)
-
 	NewMedianProvider(rargs RelayArgs, pargs PluginArgs) (MedianProvider, error)
 	NewMercuryProvider(rargs RelayArgs, pargs PluginArgs) (MercuryProvider, error)
 	NewFunctionsProvider(rargs RelayArgs, pargs PluginArgs) (FunctionsProvider, error)

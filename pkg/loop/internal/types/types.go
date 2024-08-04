@@ -50,6 +50,7 @@ type Relayer interface {
 	// NewContractReader returns a new ContractReader.
 	// The format of contractReaderConfig depends on the implementation.
 	NewContractReader(ctx context.Context, contractReaderConfig []byte) (types.ContractReader, error)
+	NewContractStateReader(ctx context.Context, config []byte) (types.ContractStateReader, error)
 	NewConfigProvider(context.Context, types.RelayArgs) (types.ConfigProvider, error)
 	NewPluginProvider(context.Context, types.RelayArgs, types.PluginArgs) (types.PluginProvider, error)
 	NewLLOProvider(context.Context, types.RelayArgs, types.PluginArgs) (types.LLOProvider, error)

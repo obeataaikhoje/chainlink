@@ -30,6 +30,9 @@ func (r *RelayerAdapter) NewContractReader(_ context.Context, contractReaderConf
 	return r.Relayer.NewContractReader(contractReaderConfig)
 }
 
+func (r *RelayerAdapter) NewContractStateReader(_ context.Context, config []byte) (types.ContractStateReader, error) {
+	return r.Relayer.NewContractStateReader(config)
+}
 func (r *RelayerAdapter) NewConfigProvider(ctx context.Context, rargs types.RelayArgs) (types.ConfigProvider, error) {
 	return r.Relayer.NewConfigProvider(rargs)
 }

@@ -218,6 +218,18 @@ func (r *relayerClient) NewContractReader(_ context.Context, contractReaderConfi
 	return chainreader.NewClient(r.WithName("ChainReaderClient"), cc), nil
 }
 
+func (r *relayerClient) NewContractStateReader(ctx context.Context, config []byte) (types.ContractStateReader, error) {
+	cc := r.NewClientConn("ChainReader", func(ctx context.Context) (uint32, net.Resources, error) {
+		reply, err := r.relayer.NewContractStateReader(ctx, &pb.NewContractStateReaderRequest{ContractStateReaderConfig: config})
+		if err != nil {
+			return 0, nil, err
+		}
+		return reply.ContractStateReaderID, nil, nil
+	})
+
+	return chainreader.NewClient(r.WithName("ContractStateReaderClient"), cc), nil
+}
+
 func (r *relayerClient) NewConfigProvider(ctx context.Context, rargs types.RelayArgs) (types.ConfigProvider, error) {
 	cc := r.NewClientConn("ConfigProvider", func(ctx context.Context) (uint32, net.Resources, error) {
 		reply, err := r.relayer.NewConfigProvider(ctx, &pb.NewConfigProviderRequest{
@@ -402,6 +414,27 @@ func (r *relayerServer) NewContractReader(ctx context.Context, request *pb.NewCo
 	}
 
 	return &pb.NewContractReaderReply{ContractReaderID: id}, nil
+}
+
+func (r *relayerServer) NewContractStateReader(ctx context.Context, request *pb.NewContractStateReaderRequest) (*pb.NewContractStateReaderReply, error) {
+	csr, err := r.impl.NewContractStateReader(ctx, request.GetContractStateReaderConfig())
+	if err != nil {
+		return nil, err
+	}
+
+	if err = csr.Start(ctx); err != nil {
+		return nil, err
+	}
+
+	const name = "ContractReader"
+	id, _, err := r.ServeNew(name, func(s *grpc.Server) {
+		chainreader.RegisterContractStateReaderService(s, csr)
+	}, net.Resource{Closer: csr, Name: name})
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.NewContractStateReaderReply{ContractStateReaderID: id}, nil
 }
 
 func (r *relayerServer) NewConfigProvider(ctx context.Context, request *pb.NewConfigProviderRequest) (*pb.NewConfigProviderReply, error) {
