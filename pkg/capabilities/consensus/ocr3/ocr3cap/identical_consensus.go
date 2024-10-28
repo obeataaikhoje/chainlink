@@ -27,22 +27,22 @@ func (c IdenticalConsensusConfig[T]) New(w *sdk.WorkflowSpecFactory, ref string,
 		CapabilityType: capabilities.CapabilityTypeConsensus,
 	}
 
-	step := sdk.Step[SignedReport]{Definition: def}
-	return SignedReportCapFromStep(w, step)
+	step := &sdk.Step[SignedReport]{Definition: def}
+	return SignedReportWrapper(step.AddTo(w))
 }
 
 type IdenticalConsensusInput[T any] struct {
-	Observations sdk.CapDefinition[T]
-}
-
-type IdenticalConsensusMergedInput[T any] struct {
-	Observations []T
+	Observation   sdk.CapDefinition[T]
+	Encoder       Encoder
+	EncoderConfig EncoderConfig
 }
 
 func (input IdenticalConsensusInput[T]) ToSteps() sdk.StepInputs {
 	return sdk.StepInputs{
 		Mapping: map[string]any{
-			"observations": input.Observations.Ref(),
+			"observations":  sdk.ListOf(input.Observation).Ref(),
+			"encoder":       input.Encoder,
+			"encoderConfig": input.EncoderConfig,
 		},
 	}
 }
