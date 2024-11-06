@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -310,6 +311,14 @@ func (it *fakeContractReaderInterfaceTester) Setup(_ *testing.T) {
 	}
 }
 
+func (it *fakeContractReaderInterfaceTester) StartServices(ctx context.Context, t *testing.T) {
+	require.NoError(t, it.impl.Start(ctx))
+}
+
+func (it *fakeContractReaderInterfaceTester) CloseServices(t *testing.T) {
+	require.NoError(t, it.impl.Close())
+}
+
 func (it *fakeContractReaderInterfaceTester) GetContractReader(_ *testing.T) types.ContractReader {
 	return it.impl
 }
@@ -358,7 +367,10 @@ type fakeContractReader struct {
 	stored      map[string][]TestStruct
 	batchStored BatchCallEntry
 	lock        sync.Mutex
+	isStarted   atomic.Bool
 }
+
+var errServiceNotStarted = errors.New("ContractReader service not started")
 
 type fakeChainWriter struct {
 	types.ChainWriter
@@ -407,9 +419,15 @@ func (f *fakeChainWriter) GetFeeComponents(ctx context.Context) (*types.ChainFee
 	return &types.ChainFeeComponents{}, nil
 }
 
-func (f *fakeContractReader) Start(_ context.Context) error { return nil }
+func (f *fakeContractReader) Start(_ context.Context) error {
+	f.isStarted.Store(true)
+	return nil
+}
 
-func (f *fakeContractReader) Close() error { return nil }
+func (f *fakeContractReader) Close() error {
+	f.isStarted.Store(false)
+	return nil
+}
 
 func (f *fakeContractReader) Ready() error { panic("unimplemented") }
 
@@ -453,6 +471,9 @@ func (f *fakeContractReader) SetBatchLatestValues(batchCallEntry BatchCallEntry)
 }
 
 func (f *fakeContractReader) GetLatestValue(_ context.Context, readIdentifier string, confidenceLevel primitives.ConfidenceLevel, params, returnVal any) error {
+	if !f.isStarted.Load() {
+		return errServiceNotStarted
+	}
 	split := strings.Split(readIdentifier, "-")
 	contractName := strings.Join([]string{split[0], split[1]}, "-")
 	if strings.HasSuffix(readIdentifier, MethodReturningAlterableUint64) {
@@ -549,6 +570,9 @@ func (f *fakeContractReader) GetLatestValue(_ context.Context, readIdentifier st
 }
 
 func (f *fakeContractReader) BatchGetLatestValues(_ context.Context, request types.BatchGetLatestValuesRequest) (types.BatchGetLatestValuesResult, error) {
+	if !f.isStarted.Load() {
+		return nil, errServiceNotStarted
+	}
 	result := make(types.BatchGetLatestValuesResult)
 	for requestContract, requestContractBatch := range request {
 		storedContractBatch := f.batchStored[requestContract]
@@ -605,6 +629,9 @@ func (f *fakeContractReader) BatchGetLatestValues(_ context.Context, request typ
 }
 
 func (f *fakeContractReader) QueryKey(_ context.Context, bc types.BoundContract, filter query.KeyFilter, limitAndSort query.LimitAndSort, sequenceType any) ([]types.Sequence, error) {
+	if !f.isStarted.Load() {
+		return nil, errServiceNotStarted
+	}
 	_, isValueType := sequenceType.(*values.Value)
 	if filter.Key == EventName {
 		f.lock.Lock()
@@ -844,7 +871,8 @@ func runContractReaderByIDGetLatestValue(t *testing.T) {
 			toBind := make(map[string]types.BoundContract)
 			ctx := tests.Context(t)
 			cr := chainreader.WrapContractReaderByIDs(tester.GetContractReader(t))
-
+			tester.StartServices(ctx, t)
+			defer tester.CloseServices(t)
 			anyContract := BindingsByName(tester.GetBindings(t), AnyContractName)[0]
 			anySecondContract := BindingsByName(tester.GetBindings(t), AnySecondContractName)[0]
 
@@ -870,7 +898,8 @@ func runContractReaderByIDGetLatestValue(t *testing.T) {
 			toBind := make(map[string]types.BoundContract)
 			ctx := tests.Context(t)
 			cr := chainreader.WrapContractReaderByIDs(tester.GetContractReader(t))
-
+			tester.StartServices(ctx, t)
+			defer tester.CloseServices(t)
 			anyContracts := BindingsByName(tester.GetBindings(t), AnyContractName)
 			anyContract1, anyContract2 := anyContracts[0], anyContracts[1]
 			anyContractID1, anyContractID2 := "1-"+anyContract1.String(), "2-"+anyContract2.String()
@@ -909,7 +938,8 @@ func runContractReaderByIDBatchGetLatestValues(t *testing.T) {
 			toBind := make(map[string]types.BoundContract)
 			ctx := tests.Context(t)
 			cr := chainreader.WrapContractReaderByIDs(tester.GetContractReader(t))
-
+			tester.StartServices(ctx, t)
+			defer tester.CloseServices(t)
 			anyContract := BindingsByName(tester.GetBindings(t), AnyContractName)[0]
 			anyContractID := "1-" + anyContract.String()
 			toBind[anyContractID] = anyContract
@@ -946,7 +976,8 @@ func runContractReaderByIDBatchGetLatestValues(t *testing.T) {
 			toBind := make(map[string]types.BoundContract)
 			ctx := tests.Context(t)
 			cr := chainreader.WrapContractReaderByIDs(tester.GetContractReader(t))
-
+			tester.StartServices(ctx, t)
+			defer tester.CloseServices(t)
 			anyContracts := BindingsByName(tester.GetBindings(t), AnyContractName)
 			anyContract1, anyContract2 := anyContracts[0], anyContracts[1]
 			anyContractID1, anyContractID2 := "1-"+anyContract1.String(), "2-"+anyContract2.String()
@@ -1010,7 +1041,8 @@ func runContractReaderByIDQueryKey(t *testing.T) {
 			toBind := make(map[string]types.BoundContract)
 			ctx := tests.Context(t)
 			cr := chainreader.WrapContractReaderByIDs(tester.GetContractReader(t))
-
+			tester.StartServices(ctx, t)
+			defer tester.CloseServices(t)
 			anyContract := BindingsByName(tester.GetBindings(t), AnyContractName)[0]
 			anyContractID := "1-" + anyContract.String()
 			toBind[anyContractID] = anyContract
@@ -1053,7 +1085,8 @@ func runContractReaderByIDQueryKey(t *testing.T) {
 			toBind := make(map[string]types.BoundContract)
 			ctx := tests.Context(t)
 			cr := chainreader.WrapContractReaderByIDs(tester.GetContractReader(t))
-
+			tester.StartServices(ctx, t)
+			defer tester.CloseServices(t)
 			anyContract1 := BindingsByName(tester.GetBindings(t), AnyContractName)[0]
 			anyContract2 := types.BoundContract{Address: "new-" + anyContract1.Address, Name: anyContract1.Name}
 			anyContractID1, anyContractID2 := "1-"+anyContract1.String(), "2-"+anyContract2.String()
