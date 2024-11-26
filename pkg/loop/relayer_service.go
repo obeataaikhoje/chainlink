@@ -103,3 +103,8 @@ func (r *RelayerService) Transact(ctx context.Context, from, to string, amount *
 	}
 	return r.Service.Transact(ctx, from, to, amount, balanceCheck)
 }
+
+func (r *RelayerService) NewPluginCodec(ctx context.Context, contractReaderConfig []byte) (types.RemoteCodec, error) {
+	//TODO implement me
+	panic("implement me")
+}

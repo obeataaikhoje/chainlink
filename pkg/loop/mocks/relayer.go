@@ -584,6 +584,65 @@ func (_c *Relayer_NewLLOProvider_Call) RunAndReturn(run func(context.Context, ty
 	return _c
 }
 
+// NewPluginCodec provides a mock function with given fields: ctx, contractReaderConfig
+func (_m *Relayer) NewPluginCodec(ctx context.Context, contractReaderConfig []byte) (types.RemoteCodec, error) {
+	ret := _m.Called(ctx, contractReaderConfig)
+
+	if len(ret) == 0 {
+		panic("no return value specified for NewPluginCodec")
+	}
+
+	var r0 types.RemoteCodec
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) (types.RemoteCodec, error)); ok {
+		return rf(ctx, contractReaderConfig)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) types.RemoteCodec); ok {
+		r0 = rf(ctx, contractReaderConfig)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(types.RemoteCodec)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte) error); ok {
+		r1 = rf(ctx, contractReaderConfig)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Relayer_NewPluginCodec_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'NewPluginCodec'
+type Relayer_NewPluginCodec_Call struct {
+	*mock.Call
+}
+
+// NewPluginCodec is a helper method to define mock.On call
+//   - ctx context.Context
+//   - contractReaderConfig []byte
+func (_e *Relayer_Expecter) NewPluginCodec(ctx interface{}, contractReaderConfig interface{}) *Relayer_NewPluginCodec_Call {
+	return &Relayer_NewPluginCodec_Call{Call: _e.mock.On("NewPluginCodec", ctx, contractReaderConfig)}
+}
+
+func (_c *Relayer_NewPluginCodec_Call) Run(run func(ctx context.Context, contractReaderConfig []byte)) *Relayer_NewPluginCodec_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].([]byte))
+	})
+	return _c
+}
+
+func (_c *Relayer_NewPluginCodec_Call) Return(_a0 types.RemoteCodec, _a1 error) *Relayer_NewPluginCodec_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *Relayer_NewPluginCodec_Call) RunAndReturn(run func(context.Context, []byte) (types.RemoteCodec, error)) *Relayer_NewPluginCodec_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewPluginProvider provides a mock function with given fields: _a0, _a1, _a2
 func (_m *Relayer) NewPluginProvider(_a0 context.Context, _a1 types.RelayArgs, _a2 types.PluginArgs) (types.PluginProvider, error) {
 	ret := _m.Called(_a0, _a1, _a2)
