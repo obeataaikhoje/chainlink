@@ -122,7 +122,7 @@ func (s *Server) start() error {
 		beholder.SetGlobalOtelProviders()
 	}
 
-	s.promServer = NewPromServer(envCfg.PrometheusPort, s.Logger)
+	s.promServer = &PromServer{Port: envCfg.PrometheusPort, Logger: s.Logger}
 	if err := s.promServer.Start(); err != nil {
 		return fmt.Errorf("error starting prometheus server: %w", err)
 	}
